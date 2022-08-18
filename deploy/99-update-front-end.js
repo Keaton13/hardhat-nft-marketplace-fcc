@@ -1,17 +1,35 @@
-const { ethers, network } = require("hardhat")
+const {ethers, network} = require("hardhat")
 const fs = require("fs")
 
 const frontEndContractsFile = "../nextjs-nft-marketplace-fcc/constants/networkMapping.json"
+const frontEndAbiLocation = "../nextjs-nft-marketplace-fcc/constants/"
 
 module.exports = async function () {
     if (process.env.UPDATE_FRONT_END) {
         console.log("updating front end...")
         await updateContractAddress()
+        await updateAbi()
     }
 }
 
-async function updateContractAddress() {
+async function updateAbi() {
     const nftMarketplace = await ethers.getContract("NftMarketplace")
+    fs.writeFileSync(
+        `${frontEndAbiLocation}NftMarketplace.json`,
+        nftMarketplace.interface.format(ethers.utils.FormatTypes.json)
+    )
+
+    const basicNft = await ethers.getContract("BasicNft")
+    fs.writeFileSync(
+        `${frontEndAbiLocation}BasicNft.json`,
+        basicNft.interface.format(ethers.utils.FormatTypes.json)
+    )
+}
+
+async function updateContractAddress() {
+    console.log("Getting Contract Address")
+    const nftMarketplace = await ethers.getContract("NftMarketplace")
+    console.log("Got contract address")
     const chainId = network.config.chainId.toString()
     const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
     if (chainId in contractAddresses) {
